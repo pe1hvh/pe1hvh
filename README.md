@@ -18,7 +18,7 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 ## Public repositories
 
 <!-- REPOS_START -->
-<!-- 13 repos — auto-updated by GitHub Actions -->
+<!-- 14 repos — auto-updated by GitHub Actions -->
 
 <img src="cards/header-meshcore.svg" width="812"/>
 
@@ -49,6 +49,13 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 
 <table border="0" cellspacing="4" cellpadding="0" style="border:none;border-collapse:collapse;background:transparent">
 <tr style="border:none;background:transparent"><td width="50%" style="border:none;padding:4px;background:transparent"><a href="https://github.com/pe1hvh/Timeline-GPX-Exporter"><img src="cards/Timeline-GPX-Exporter.svg" width="400"/></a></td><td width="50%" style="border:none;padding:4px;background:transparent"><a href="https://github.com/pe1hvh/TimeLine2MariaDB"><img src="cards/TimeLine2MariaDB.svg" width="400"/></a></td></tr>
+</table>
+
+
+<img src="cards/header-other.svg" width="812"/>
+
+<table border="0" cellspacing="4" cellpadding="0" style="border:none;border-collapse:collapse;background:transparent">
+<tr style="border:none;background:transparent"><td width="50%" style="border:none;padding:4px;background:transparent"><a href="https://github.com/pe1hvh/javaPolar"><img src="cards/javaPolar.svg" width="400"/></a></td><td width="50%" style="border:none"></td></tr>
 </table>
 
 <!-- REPOS_END -->
