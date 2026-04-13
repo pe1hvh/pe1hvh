@@ -91,6 +91,7 @@ ICON_STAR = (
     "L7.327.668A.75.75 0 018 .25z"
 )
 CARD_W, CARD_H, PAD = 400, 120, 16
+CARD_W_FULL = 812          # wide card for single-repo categories
 
 
 def esc(s):
@@ -138,7 +139,7 @@ def make_header_svg(cat):
     )
 
 
-def make_card_svg(repo):
+def make_card_svg(repo, card_w=CARD_W):
     name  = esc(repo["name"])
     desc  = repo.get("description") or ""
     lang  = repo.get("language") or ""
@@ -147,7 +148,8 @@ def make_card_svg(repo):
     fork  = repo.get("fork", False)
     lc    = LANG_COLORS.get(lang,"#8f8f8f")
     ip    = ICON_FORK if fork else ICON_REPO
-    dl    = textwrap.wrap(desc, width=48)[:2]
+    wrap_w = 48 if card_w == CARD_W else 100   # wider text wrap for full-width card
+    dl    = textwrap.wrap(desc, width=wrap_w)[:2]
     style = (
         "<style>"
         ".bg{fill:#fff;stroke:#d0d7de;stroke-width:1}"
@@ -162,9 +164,9 @@ def make_card_svg(repo):
         "</style>"
     )
     p = [
-        f'<svg width="{CARD_W}" height="{CARD_H}" viewBox="0 0 {CARD_W} {CARD_H}" xmlns="http://www.w3.org/2000/svg">',
+        f'<svg width="{card_w}" height="{CARD_H}" viewBox="0 0 {card_w} {CARD_H}" xmlns="http://www.w3.org/2000/svg">',
         style,
-        f'<rect x="0" y="0" width="{CARD_W}" height="{CARD_H}" rx="8" class="bg"/>',
+        f'<rect x="0" y="0" width="{card_w}" height="{CARD_H}" rx="8" class="bg"/>',
         f'<path transform="translate({PAD},{PAD}) scale(0.9)" d="{ip}" class="ic"/>',
         f'<text x="{PAD+20}" y="{PAD+13}" class="nm">{name}</text>',
     ]
@@ -197,8 +199,12 @@ def write_cards(repos):
     current |= {f"header-{cat_slug(c)}.svg" for c in CATEGORIES}
     for stale in existing - current:
         os.remove(os.path.join(CARDS_DIR, stale))
+    # Determine which repos are alone in their category → wide card
+    grouped = categorize(repos)
+    single_repos = {group[0]["name"] for group in grouped.values() if len(group) == 1}
     for repo in repos:
-        open(os.path.join(CARDS_DIR,f"{repo['name']}.svg"),"w",encoding="utf-8").write(make_card_svg(repo))
+        card_w = CARD_W_FULL if repo["name"] in single_repos else CARD_W
+        open(os.path.join(CARDS_DIR,f"{repo['name']}.svg"),"w",encoding="utf-8").write(make_card_svg(repo, card_w=card_w))
     for cat in CATEGORIES:
         open(os.path.join(CARDS_DIR,f"header-{cat_slug(cat)}.svg"),"w",encoding="utf-8").write(make_header_svg(cat))
     print(f"{len(repos)} cards + {len(CATEGORIES)} headers written.")
@@ -236,10 +242,20 @@ def build_readme_block(repos):
             '<table border="0" cellspacing="4" cellpadding="0"'
             ' style="border:none;border-collapse:collapse;background:transparent">'
         )
-        for i in range(0, len(group), 2):
-            l = td(group[i])
-            r = td(group[i+1]) if i+1<len(group) else '<td width="50%" style="border:none"></td>'
-            parts.append(f'<tr style="border:none;background:transparent">{l}{r}</tr>')
+        if len(group) == 1:
+            # Single repo in category → full-width card spanning both columns
+            repo = group[0]
+            parts.append(
+                f'<tr style="border:none;background:transparent">'
+                f'<td colspan="2" style="border:none;padding:4px;background:transparent">'
+                f'<a href="{repo["html_url"]}">'
+                f'<img src="cards/{repo["name"]}.svg" width="812"/></a></td></tr>'
+            )
+        else:
+            for i in range(0, len(group), 2):
+                l = td(group[i])
+                r = td(group[i+1]) if i+1<len(group) else '<td width="50%" style="border:none"></td>'
+                parts.append(f'<tr style="border:none;background:transparent">{l}{r}</tr>')
         parts.append("</table>\n")
     return "\n".join(parts)
 
