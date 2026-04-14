@@ -1,7 +1,12 @@
 """
-update_repos.py — per-repo SVG cards + category headers, two-column table layout.
+update_repos.py — native HTML repo panels + category header SVGs.
+
+Panels zijn identiek aan GitHub 'Popular repositories' pinned-item stijl:
+  - flexbox layout, responsive 2-koloms via min-width
+  - inline styles (GitHub markdown renderer heeft geen Primer CSS)
+  - CSS variables voor dark mode ondersteuning
 """
-import os, re, textwrap, requests
+import os, re, requests
 
 USER       = os.environ.get("GITHUB_USER", "pe1hvh")
 TOKEN      = os.environ.get("GITHUB_TOKEN", "")
@@ -90,8 +95,6 @@ ICON_STAR = (
     " 0 01-1.088-.79l.72-4.194L.873 6.374a.75.75 0 01.416-1.28l4.21-.611"
     "L7.327.668A.75.75 0 018 .25z"
 )
-CARD_W, CARD_H, PAD = 400, 120, 16
-CARD_W_FULL = 812          # wide card for single-repo categories
 
 
 def esc(s):
@@ -139,81 +142,19 @@ def make_header_svg(cat):
     )
 
 
-def make_card_svg(repo, card_w=CARD_W):
-    name  = esc(repo["name"])
-    desc  = repo.get("description") or ""
-    lang  = repo.get("language") or ""
-    stars = repo.get("stargazers_count", 0)
-    forks = repo.get("forks_count", 0)
-    fork  = repo.get("fork", False)
-    lc    = LANG_COLORS.get(lang,"#8f8f8f")
-    ip    = ICON_FORK if fork else ICON_REPO
-    wrap_w = 48 if card_w == CARD_W else 100   # wider text wrap for full-width card
-    dl    = textwrap.wrap(desc, width=wrap_w)[:2]
-    style = (
-        "<style>"
-        ".bg{fill:#fff;stroke:#d0d7de;stroke-width:1}"
-        ".nm{font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#0969da}"
-        ".dc,.mt{font:400 11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}"
-        ".ic{fill:#57606a}.fb{fill:#f6f8fa;stroke:#d0d7de;stroke-width:1}"
-        ".ft{font:400 10px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;fill:#57606a}"
-        "@media(prefers-color-scheme:dark){"
-        ".bg{fill:#161b22;stroke:#30363d}.nm{fill:#58a6ff}"
-        ".dc,.mt{fill:#8b949e}.ic{fill:#8b949e}"
-        ".fb{fill:#21262d;stroke:#30363d}.ft{fill:#8b949e}}"
-        "</style>"
-    )
-    p = [
-        f'<svg width="{card_w}" height="{CARD_H}" viewBox="0 0 {card_w} {CARD_H}" xmlns="http://www.w3.org/2000/svg">',
-        style,
-        f'<rect x="0" y="0" width="{card_w}" height="{CARD_H}" rx="8" class="bg"/>',
-        f'<path transform="translate({PAD},{PAD}) scale(0.9)" d="{ip}" class="ic"/>',
-        f'<text x="{PAD+20}" y="{PAD+13}" class="nm">{name}</text>',
-    ]
-    if fork:
-        bx = CARD_W-58
-        p += [f'<rect x="{bx}" y="{PAD-2}" width="42" height="16" rx="8" class="fb"/>',
-              f'<text x="{bx+21}" y="{PAD+10}" text-anchor="middle" class="ft">fork</text>']
-    for i,ln in enumerate(dl):
-        p.append(f'<text x="{PAD}" y="{PAD+32+(i*16)}" class="dc">{esc(ln)}</text>')
-    mx, my = PAD, CARD_H-18
-    if lang:
-        p += [f'<circle cx="{mx+5}" cy="{my-3}" r="5" fill="{lc}"/>',
-              f'<text x="{mx+14}" y="{my}" class="mt">{esc(lang)}</text>']
-        mx += len(lang)*7+22
-    if stars:
-        p += [f'<path transform="translate({mx},{my-11}) scale(0.8)" d="{ICON_STAR}" class="ic"/>',
-              f'<text x="{mx+14}" y="{my}" class="mt">{stars}</text>']
-        mx += 36
-    if forks:
-        p += [f'<path transform="translate({mx},{my-11}) scale(0.8)" d="{ICON_FORK}" class="ic"/>',
-              f'<text x="{mx+14}" y="{my}" class="mt">{forks}</text>']
-    p.append("</svg>")
-    return "\n".join(p)
-
-
-def write_cards(repos):
+def write_headers():
+    """Schrijf alleen de categorie header-SVG's naar de cards/ map."""
     os.makedirs(CARDS_DIR, exist_ok=True)
-    existing = {f for f in os.listdir(CARDS_DIR) if f.endswith(".svg")}
-    current  = {f"{r['name']}.svg" for r in repos}
-    current |= {f"header-{cat_slug(c)}.svg" for c in CATEGORIES}
-    for stale in existing - current:
-        os.remove(os.path.join(CARDS_DIR, stale))
-    # Determine which repos are alone in their category → wide card
-    grouped = categorize(repos)
-    single_repos = {group[0]["name"] for group in grouped.values() if len(group) == 1}
-    for repo in repos:
-        card_w = CARD_W_FULL if repo["name"] in single_repos else CARD_W
-        open(os.path.join(CARDS_DIR,f"{repo['name']}.svg"),"w",encoding="utf-8").write(make_card_svg(repo, card_w=card_w))
     for cat in CATEGORIES:
-        open(os.path.join(CARDS_DIR,f"header-{cat_slug(cat)}.svg"),"w",encoding="utf-8").write(make_header_svg(cat))
-    print(f"{len(repos)} cards + {len(CATEGORIES)} headers written.")
+        path = os.path.join(CARDS_DIR, f"header-{cat_slug(cat)}.svg")
+        open(path, "w", encoding="utf-8").write(make_header_svg(cat))
+    print(f"{len(CATEGORIES)} header-SVG's geschreven.")
 
 
 def categorize(repos):
     assigned, result = set(), {cat:[] for cat in CATEGORIES}
-    for cat,cfg in CATEGORIES.items():
-        if cat=="Other": continue
+    for cat, cfg in CATEGORIES.items():
+        if cat == "Other": continue
         for repo in repos:
             if repo["name"] in cfg["repos"]:
                 result[cat].append(repo); assigned.add(repo["name"])
@@ -223,11 +164,84 @@ def categorize(repos):
     return result
 
 
-def td(repo):
+# ── CSS variabelen voor GitHub light/dark theming ──────────────────────────
+_BORDER   = "var(--color-border-default,#d0d7de)"
+_BG       = "var(--color-canvas-default,#ffffff)"
+_FG_MUTED = "var(--color-fg-muted,#57606a)"
+_FG_LINK  = "var(--color-accent-fg,#0969da)"
+
+
+def make_panel_html(repo):
+    """Genereer een native HTML panel identiek aan GitHub pinned-item-list-item."""
+    name  = esc(repo["name"])
+    url   = repo["html_url"]
+    desc  = esc(repo.get("description") or "")
+    lang  = repo.get("language") or ""
+    stars = repo.get("stargazers_count", 0)
+    forks = repo.get("forks_count", 0)
+    fork  = repo.get("fork", False)
+    lc    = LANG_COLORS.get(lang, "#8f8f8f")
+    icon  = ICON_FORK if fork else ICON_REPO
+
+    # ── naam + icoon ──────────────────────────────────────────────────────
+    header = (
+        f'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        f'<svg height="16" viewBox="0 0 16 16" width="16" aria-hidden="true"'
+        f' style="fill:{_FG_MUTED};flex-shrink:0;">'
+        f'<path d="{icon}"/></svg>'
+        f'<a href="{url}" style="font-weight:600;font-size:14px;'
+        f'color:{_FG_LINK};text-decoration:none;">{name}</a>'
+    )
+    if fork:
+        header += (
+            f'<span style="font-size:11px;padding:1px 7px;'
+            f'border:1px solid {_BORDER};border-radius:10px;'
+            f'color:{_FG_MUTED};">fork</span>'
+        )
+    header += '</div>'
+
+    # ── beschrijving ──────────────────────────────────────────────────────
+    desc_html = (
+        f'<p style="font-size:12px;color:{_FG_MUTED};margin:0 0 12px 0;">{desc}</p>'
+    ) if desc else ""
+
+    # ── meta: taal · sterren · forks ─────────────────────────────────────
+    meta_parts = []
+    if lang:
+        meta_parts.append(
+            f'<span style="display:inline-flex;align-items:center;gap:4px;">'
+            f'<span style="width:12px;height:12px;border-radius:50%;'
+            f'background:{lc};display:inline-block;flex-shrink:0;"></span>'
+            f'<span>{esc(lang)}</span></span>'
+        )
+    if stars:
+        meta_parts.append(
+            f'<span style="display:inline-flex;align-items:center;gap:3px;">'
+            f'<svg height="16" viewBox="0 0 16 16" width="16" aria-hidden="true"'
+            f' style="fill:{_FG_MUTED};">'
+            f'<path d="{ICON_STAR}"/></svg>{stars}</span>'
+        )
+    if forks:
+        meta_parts.append(
+            f'<span style="display:inline-flex;align-items:center;gap:3px;">'
+            f'<svg height="16" viewBox="0 0 16 16" width="16" aria-hidden="true"'
+            f' style="fill:{_FG_MUTED};">'
+            f'<path d="{ICON_FORK}"/></svg>{forks}</span>'
+        )
+
+    meta_html = (
+        f'<p style="font-size:12px;color:{_FG_MUTED};margin:0;'
+        f'display:flex;gap:12px;flex-wrap:wrap;">'
+        + "".join(meta_parts) + "</p>"
+    ) if meta_parts else ""
+
+    # ── <li> wrapper — zelfde flex-gedrag als col-12 col-md-6 ─────────────
     return (
-        '<td width="50%" style="border:none;padding:4px;background:transparent">'
-        f'<a href="{repo["html_url"]}">'
-        f'<img src="cards/{repo["name"]}.svg" width="400"/></a></td>'
+        f'<li style="flex:1 1 calc(50% - 4px);min-width:250px;box-sizing:border-box;">\n'
+        f'<div style="border:1px solid {_BORDER};border-radius:6px;'
+        f'padding:16px;height:100%;background:{_BG};">\n'
+        f'{header}\n{desc_html}\n{meta_html}\n'
+        f'</div></li>'
     )
 
 
@@ -237,26 +251,16 @@ def build_readme_block(repos):
     for cat, group in grouped.items():
         if not group: continue
         slug = cat_slug(cat)
+        # category header SVG (ongewijzigd)
         parts.append(f'\n<img src="cards/header-{slug}.svg" width="812"/>\n')
+        # responsive flex-lijst — identiek aan GitHub pinned-item ol
         parts.append(
-            '<table border="0" cellspacing="4" cellpadding="0"'
-            ' style="border:none;border-collapse:collapse;background:transparent">'
+            '<ol style="display:flex;flex-wrap:wrap;list-style:none;'
+            'padding:0;margin:4px 0 16px 0;gap:8px;">'
         )
-        if len(group) == 1:
-            # Single repo in category → full-width card spanning both columns
-            repo = group[0]
-            parts.append(
-                f'<tr style="border:none;background:transparent">'
-                f'<td colspan="2" style="border:none;padding:4px;background:transparent">'
-                f'<a href="{repo["html_url"]}">'
-                f'<img src="cards/{repo["name"]}.svg" width="812"/></a></td></tr>'
-            )
-        else:
-            for i in range(0, len(group), 2):
-                l = td(group[i])
-                r = td(group[i+1]) if i+1<len(group) else '<td width="50%" style="border:none"></td>'
-                parts.append(f'<tr style="border:none;background:transparent">{l}{r}</tr>')
-        parts.append("</table>\n")
+        for repo in group:
+            parts.append(make_panel_html(repo))
+        parts.append("</ol>\n")
     return "\n".join(parts)
 
 
@@ -265,21 +269,21 @@ def update_readme(repos):
         content = fh.read()
     pattern = re.compile(rf"{re.escape(START)}.*?{re.escape(END)}", re.DOTALL)
     if not pattern.search(content):
-        raise ValueError(f"Markers not found in {README}")
+        raise ValueError(f"Markers niet gevonden in {README}")
     block = (
         f"{START}\n"
         f"<!-- {len(repos)} repos — auto-updated by GitHub Actions -->\n"
         f"{build_readme_block(repos)}\n"
         f"{END}"
     )
-    with open(README,"w",encoding="utf-8") as fh:
+    with open(README, "w", encoding="utf-8") as fh:
         fh.write(pattern.sub(block, content))
-    print("README.md updated.")
+    print("README.md bijgewerkt.")
 
 
 if __name__ == "__main__":
-    print(f"Fetching repositories for {USER}...")
+    print(f"Repositories ophalen voor {USER}...")
     repos = fetch_repos()
-    print(f"{len(repos)} repos found.")
-    write_cards(repos)
+    print(f"{len(repos)} repos gevonden.")
+    write_headers()
     update_readme(repos)
