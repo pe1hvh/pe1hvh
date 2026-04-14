@@ -84,6 +84,13 @@ LANG_DOT = {
     "HTML":"🟠","CSS":"🟣","Makefile":"🟤",
 }
 
+# Tekens die Mermaid's label-parser breken (ook binnen quoted strings)
+_MERMAID_UNSAFE = {
+    '"': "'", '(': '', ')': '', '[': '', ']': '',
+    '{': '', '}': '', ';': ',', '%': '', '#': '',
+    '`': '', '&': 'and',
+}
+
 
 def esc(s):
     return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"','&quot;')
@@ -158,13 +165,21 @@ def _node_id(name):
     return re.sub(r"[^A-Za-z0-9]", "_", name)
 
 
+def _safe_mermaid(text):
+    """Verwijder/vervang tekens die Mermaid's label-parser breken."""
+    for ch, repl in _MERMAID_UNSAFE.items():
+        text = text.replace(ch, repl)
+    return text.strip()
+
+
 def _node_label(repo):
     """
-    Mermaid node-tekst met backtick-syntax (ondersteunt markdown-bold + newlines).
+    Mermaid node-label als gewone ["..."] string met <br/> regeleinden.
+    Compatibel met Mermaid v8+ (GitHub). Geen backtick/markdown-strings.
     Maximaal 3 regels: naam · beschrijving · meta.
     """
-    name  = repo["name"]
-    desc  = (repo.get("description") or "")[:55]
+    name  = _safe_mermaid(repo["name"])
+    desc  = _safe_mermaid((repo.get("description") or "")[:55])
     lang  = repo.get("language") or ""
     stars = repo.get("stargazers_count", 0)
     forks = repo.get("forks_count", 0)
@@ -175,8 +190,11 @@ def _node_label(repo):
     if stars: meta += f"  ⭐ {stars}"
     if forks: meta += f"  ⑂ {forks}"
 
-    # Backtick-label: Mermaid rendert ** als bold, \n als regeleinde
-    return f'"`**{name}**\n{desc}\n{meta}`"'
+    # ["naam<br/>beschrijving<br/>meta"] — veilig voor alle Mermaid versies
+    parts = [name]
+    if desc: parts.append(desc)
+    if meta: parts.append(meta)
+    return '["' + "<br/>".join(parts) + '"]'
 
 
 def make_mermaid_block(repos):
@@ -192,14 +210,11 @@ def make_mermaid_block(repos):
     lines = []
 
     # ── Mermaid theme: wit kader, grijze rand, geen pijlen zichtbaar ──────
+    # init op één regel — multi-line init kan parse-fouten geven
     lines += [
-        "%%{init: {'theme': 'base', 'themeVariables': {",
-        "  'primaryColor': '#ffffff',",
-        "  'primaryBorderColor': '#d0d7de',",
-        "  'primaryTextColor': '#24292f',",
-        "  'lineColor': 'transparent',",
-        "  'fontSize': '13px'",
-        "}}}%%",
+        "%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff',"
+        "'primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f',"
+        "'lineColor':'transparent','fontSize':'13px'}}}%%",
         "flowchart TD",
     ]
 
