@@ -23,29 +23,13 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 <img src="cards/header-meshcore.svg" width="812"/>
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#ffffff',
-  'primaryBorderColor': '#d0d7de',
-  'primaryTextColor': '#24292f',
-  'lineColor': 'transparent',
-  'fontSize': '13px'
-}}}%%
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
 flowchart TD
-    meshcore_observer"`**meshcore-observer**
-A standalone daemon that reads JSON archive files produ
-🔵 Python`"
-    meshcore_bridge"`**meshcore-bridge**
-MeshCore Channel Bridge — selectively relays messages b
-🔵 Python`"
-    meshcore_gui"`**meshcore-gui**
-Native desktop GUI for MeshCore mesh network devices vi
-🔵 Python  ⭐ 13  ⑂ 1`"
-    meshcore_ble_connect"`**meshcore-ble-connect**
-Standalone BLE Connection Manager — ensures a BLE bond 
-🔵 Python`"
-    meshcore_py"`**meshcore_py**
-Python bindings for meshcore
-`"
+    meshcore_observer["meshcore-observer<br/>A standalone daemon that reads JSON archive files produ<br/>🔵 Python"]
+    meshcore_bridge["meshcore-bridge<br/>MeshCore Channel Bridge — selectively relays messages b<br/>🔵 Python"]
+    meshcore_gui["meshcore-gui<br/>Native desktop GUI for MeshCore mesh network devices vi<br/>🔵 Python  ⭐ 13  ⑂ 1"]
+    meshcore_ble_connect["meshcore-ble-connect<br/>Standalone BLE Connection Manager — ensures a BLE bond<br/>🔵 Python"]
+    meshcore_py["meshcore_py<br/>Python bindings for meshcore"]
     R0[" "]
     R0 ~~~ meshcore_observer
     R0 ~~~ meshcore_bridge
@@ -75,23 +59,11 @@ Python bindings for meshcore
 <img src="cards/header-morse-en-cw.svg" width="812"/>
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#ffffff',
-  'primaryBorderColor': '#d0d7de',
-  'primaryTextColor': '#24292f',
-  'lineColor': 'transparent',
-  'fontSize': '13px'
-}}}%%
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
 flowchart TD
-    configurable_morse_code_interface"`**configurable_morse_code_interface**
-DIY Configurable USB/HID Morse Code Interface for LWCO,
-🔴 C++  ⭐ 2  ⑂ 3`"
-    VBand_interface"`**VBand_interface**
-VBand Interface for the Seeeduino XIAO
-🔴 C++`"
-    cw_lcwo_pcw_interface"`**cw_lcwo_pcw_interface**
-CW interface for using it with Learn CW online and PCWF
-🔴 C++`"
+    configurable_morse_code_interface["configurable_morse_code_interface<br/>DIY Configurable USB/HID Morse Code Interface for LWCO,<br/>🔴 C++  ⭐ 2  ⑂ 3"]
+    VBand_interface["VBand_interface<br/>VBand Interface for the Seeeduino XIAO<br/>🔴 C++"]
+    cw_lcwo_pcw_interface["cw_lcwo_pcw_interface<br/>CW interface for using it with Learn CW online and PCWF<br/>🔴 C++"]
     R0[" "]
     R0 ~~~ configurable_morse_code_interface
     R0 ~~~ VBand_interface
@@ -112,23 +84,11 @@ CW interface for using it with Learn CW online and PCWF
 <img src="cards/header-arduino.svg" width="812"/>
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#ffffff',
-  'primaryBorderColor': '#d0d7de',
-  'primaryTextColor': '#24292f',
-  'lineColor': 'transparent',
-  'fontSize': '13px'
-}}}%%
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
 flowchart TD
-    frequency_generator"`**frequency-generator**
-10kHz to 225MHz VFO / RF Generator
-⚫ C  ⭐ 1`"
-    platformIO2arduinoIDE"`**platformIO2arduinoIDE**
-Convert PlatformIO code to Arduino sketches
-🟢 Shell  ⭐ 1`"
-    measure_bouncing"`**measure_bouncing**
-Simple test program for measure bouncing
-🔴 C++`"
+    frequency_generator["frequency-generator<br/>10kHz to 225MHz VFO / RF Generator<br/>⚫ C  ⭐ 1"]
+    platformIO2arduinoIDE["platformIO2arduinoIDE<br/>Convert PlatformIO code to Arduino sketches<br/>🟢 Shell  ⭐ 1"]
+    measure_bouncing["measure_bouncing<br/>Simple test program for measure bouncing<br/>🔴 C++"]
     R0[" "]
     R0 ~~~ frequency_generator
     R0 ~~~ platformIO2arduinoIDE
@@ -149,20 +109,10 @@ Simple test program for measure bouncing
 <img src="cards/header-google-timeline.svg" width="812"/>
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#ffffff',
-  'primaryBorderColor': '#d0d7de',
-  'primaryTextColor': '#24292f',
-  'lineColor': 'transparent',
-  'fontSize': '13px'
-}}}%%
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
 flowchart TD
-    Timeline_GPX_Exporter"`**Timeline-GPX-Exporter**
-Convert Google timeline new JSON format to daily GPX fi
-🔵 Python`"
-    TimeLine2MariaDB"`**TimeLine2MariaDB**
-Tijdlijn van Google Android telefoon omzetten naar Mari
-🔵 Python`"
+    Timeline_GPX_Exporter["Timeline-GPX-Exporter<br/>Convert Google timeline new JSON format to daily GPX fi<br/>🔵 Python"]
+    TimeLine2MariaDB["TimeLine2MariaDB<br/>Tijdlijn van Google Android telefoon omzetten naar Mari<br/>🔵 Python"]
     R0[" "]
     R0 ~~~ Timeline_GPX_Exporter
     R0 ~~~ TimeLine2MariaDB
@@ -177,17 +127,9 @@ Tijdlijn van Google Android telefoon omzetten naar Mari
 <img src="cards/header-other.svg" width="812"/>
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'primaryColor': '#ffffff',
-  'primaryBorderColor': '#d0d7de',
-  'primaryTextColor': '#24292f',
-  'lineColor': 'transparent',
-  'fontSize': '13px'
-}}}%%
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
 flowchart TD
-    javaPolar"`**javaPolar**
-Automates Polar Flow training data export and upload us
-⚪ Java`"
+    javaPolar["javaPolar<br/>Automates Polar Flow training data export and upload us<br/>⚪ Java"]
     R0[" "]
     R0 ~~~ javaPolar
     style R0 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
