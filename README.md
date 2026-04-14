@@ -20,122 +20,38 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 <!-- REPOS_START -->
 <!-- 14 repos — auto-updated by GitHub Actions -->
 
-<img src="cards/header-meshcore.svg" width="812"/>
+<img src="cards/header-meshcore.svg" style="max-width:812px;width:100%"/>
 
-```mermaid
-%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
-flowchart TD
-    meshcore_observer["meshcore-observer<br/>A standalone daemon that reads JSON archive files produ<br/>🔵 Python"]
-    meshcore_bridge["meshcore-bridge<br/>MeshCore Channel Bridge — selectively relays messages b<br/>🔵 Python"]
-    meshcore_gui["meshcore-gui<br/>Native desktop GUI for MeshCore mesh network devices vi<br/>🔵 Python  ⭐ 13  ⑂ 1"]
-    meshcore_ble_connect["meshcore-ble-connect<br/>Standalone BLE Connection Manager — ensures a BLE bond<br/>🔵 Python"]
-    meshcore_py["meshcore_py<br/>Python bindings for meshcore"]
-    R0[" "]
-    R0 ~~~ meshcore_observer
-    R0 ~~~ meshcore_bridge
-    style R0 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    R1[" "]
-    R1 ~~~ meshcore_gui
-    R1 ~~~ meshcore_ble_connect
-    R0 ~~~ R1
-    style R1 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    R2[" "]
-    R2 ~~~ meshcore_py
-    R1 ~~~ R2
-    style R2 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    click meshcore_observer href "https://github.com/pe1hvh/meshcore-observer" _blank
-    click meshcore_bridge href "https://github.com/pe1hvh/meshcore-bridge" _blank
-    click meshcore_gui href "https://github.com/pe1hvh/meshcore-gui" _blank
-    click meshcore_ble_connect href "https://github.com/pe1hvh/meshcore-ble-connect" _blank
-    click meshcore_py href "https://github.com/pe1hvh/meshcore_py" _blank
-    style meshcore_observer fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style meshcore_bridge fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style meshcore_gui fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style meshcore_ble_connect fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style meshcore_py fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-```
+<a href="https://github.com/pe1hvh/meshcore-observer"><img src="cards/meshcore-observer.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-bridge"><img src="cards/meshcore-bridge.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/meshcore-gui"><img src="cards/meshcore-gui.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-ble-connect"><img src="cards/meshcore-ble-connect.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/meshcore_py"><img src="cards/meshcore_py.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
 
 
-<img src="cards/header-morse-en-cw.svg" width="812"/>
 
-```mermaid
-%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
-flowchart TD
-    configurable_morse_code_interface["configurable_morse_code_interface<br/>DIY Configurable USB/HID Morse Code Interface for LWCO,<br/>🔴 C++  ⭐ 2  ⑂ 3"]
-    VBand_interface["VBand_interface<br/>VBand Interface for the Seeeduino XIAO<br/>🔴 C++"]
-    cw_lcwo_pcw_interface["cw_lcwo_pcw_interface<br/>CW interface for using it with Learn CW online and PCWF<br/>🔴 C++"]
-    R0[" "]
-    R0 ~~~ configurable_morse_code_interface
-    R0 ~~~ VBand_interface
-    style R0 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    R1[" "]
-    R1 ~~~ cw_lcwo_pcw_interface
-    R0 ~~~ R1
-    style R1 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    click configurable_morse_code_interface href "https://github.com/pe1hvh/configurable_morse_code_interface" _blank
-    click VBand_interface href "https://github.com/pe1hvh/VBand_interface" _blank
-    click cw_lcwo_pcw_interface href "https://github.com/pe1hvh/cw_lcwo_pcw_interface" _blank
-    style configurable_morse_code_interface fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style VBand_interface fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style cw_lcwo_pcw_interface fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-```
+<img src="cards/header-morse-en-cw.svg" style="max-width:812px;width:100%"/>
+
+<a href="https://github.com/pe1hvh/configurable_morse_code_interface"><img src="cards/configurable_morse_code_interface.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/VBand_interface"><img src="cards/VBand_interface.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/cw_lcwo_pcw_interface"><img src="cards/cw_lcwo_pcw_interface.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
 
 
-<img src="cards/header-arduino.svg" width="812"/>
 
-```mermaid
-%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
-flowchart TD
-    frequency_generator["frequency-generator<br/>10kHz to 225MHz VFO / RF Generator<br/>⚫ C  ⭐ 1"]
-    platformIO2arduinoIDE["platformIO2arduinoIDE<br/>Convert PlatformIO code to Arduino sketches<br/>🟢 Shell  ⭐ 1"]
-    measure_bouncing["measure_bouncing<br/>Simple test program for measure bouncing<br/>🔴 C++"]
-    R0[" "]
-    R0 ~~~ frequency_generator
-    R0 ~~~ platformIO2arduinoIDE
-    style R0 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    R1[" "]
-    R1 ~~~ measure_bouncing
-    R0 ~~~ R1
-    style R1 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    click frequency_generator href "https://github.com/pe1hvh/frequency-generator" _blank
-    click platformIO2arduinoIDE href "https://github.com/pe1hvh/platformIO2arduinoIDE" _blank
-    click measure_bouncing href "https://github.com/pe1hvh/measure_bouncing" _blank
-    style frequency_generator fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style platformIO2arduinoIDE fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style measure_bouncing fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-```
+<img src="cards/header-arduino.svg" style="max-width:812px;width:100%"/>
+
+<a href="https://github.com/pe1hvh/frequency-generator"><img src="cards/frequency-generator.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/platformIO2arduinoIDE"><img src="cards/platformIO2arduinoIDE.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/measure_bouncing"><img src="cards/measure_bouncing.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
 
 
-<img src="cards/header-google-timeline.svg" width="812"/>
 
-```mermaid
-%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
-flowchart TD
-    Timeline_GPX_Exporter["Timeline-GPX-Exporter<br/>Convert Google timeline new JSON format to daily GPX fi<br/>🔵 Python"]
-    TimeLine2MariaDB["TimeLine2MariaDB<br/>Tijdlijn van Google Android telefoon omzetten naar Mari<br/>🔵 Python"]
-    R0[" "]
-    R0 ~~~ Timeline_GPX_Exporter
-    R0 ~~~ TimeLine2MariaDB
-    style R0 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    click Timeline_GPX_Exporter href "https://github.com/pe1hvh/Timeline-GPX-Exporter" _blank
-    click TimeLine2MariaDB href "https://github.com/pe1hvh/TimeLine2MariaDB" _blank
-    style Timeline_GPX_Exporter fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-    style TimeLine2MariaDB fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-```
+<img src="cards/header-google-timeline.svg" style="max-width:812px;width:100%"/>
+
+<a href="https://github.com/pe1hvh/Timeline-GPX-Exporter"><img src="cards/Timeline-GPX-Exporter.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/TimeLine2MariaDB"><img src="cards/TimeLine2MariaDB.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
 
 
-<img src="cards/header-other.svg" width="812"/>
 
-```mermaid
-%%{init:{'theme':'base','themeVariables':{'primaryColor':'#ffffff','primaryBorderColor':'#d0d7de','primaryTextColor':'#24292f','lineColor':'transparent','fontSize':'13px'}}}%%
-flowchart TD
-    javaPolar["javaPolar<br/>Automates Polar Flow training data export and upload us<br/>⚪ Java"]
-    R0[" "]
-    R0 ~~~ javaPolar
-    style R0 fill:transparent,stroke:transparent,color:transparent,width:0px,height:0px
-    click javaPolar href "https://github.com/pe1hvh/javaPolar" _blank
-    style javaPolar fill:#ffffff,stroke:#d0d7de,stroke-width:1px,color:#0969da,text-align:left
-```
+<img src="cards/header-other.svg" style="max-width:812px;width:100%"/>
+
+<a href="https://github.com/pe1hvh/javaPolar"><img src="cards/javaPolar.svg" style="max-width:812px;width:100%"/></a>
+
 
 <!-- REPOS_END -->
 
