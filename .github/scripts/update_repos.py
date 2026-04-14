@@ -1,14 +1,14 @@
 """
-update_repos.py — native HTML repo-panels + categorie header SVGs.
+update_repos.py — SVG category-headers + Mermaid repo-kaarten met click-links.
 
-Layout-strategie (GitHub markdown CSS-beperkingen):
-  - float:left + width:48%          → 2-koloms raster, geen flex-wrap nodig
-  - overflow:hidden op container    → float clearfix
-  - border:1px solid #d0d7de       → kaartrand (border IS toegestaan)
-  - inline <svg>                    → octicon iconen (svg IS toegestaan)
-  - ● unicode + style color         → taalkleur-bolletje (geen border-radius nodig)
-  - border-radius NIET gebruikt     → wordt door GitHub gestript
-  - gap / flex-wrap NIET gebruikt   → worden door GitHub gestript
+Aanpak:
+  - SVG headers (ongewijzigd, zien er goed uit)
+  - Mermaid flowchart TD per categorie voor de repo-kaarten:
+      * Wit kader met grijze rand  (identiek aan GitHub pinned-item stijl)
+      * click handlers            → ECHTE hyperlinks in GitHub-rendered Mermaid
+      * Hidden root-nodes R0/R1…  → kaarten per rij in dezelfde rank → naast elkaar
+      * %%{init}%%                → theming (wit, #d0d7de rand, transparante verbindingen)
+  - Geen <table>, geen vaste SVG-breedte, geen flex/float hacks
 """
 import os, re, requests
 
@@ -77,30 +77,12 @@ CATEGORIES = {
     },
 }
 
-LANG_COLORS = {
-    "Python":"#3572A5","C++":"#f34b7d","C":"#555555","PHP":"#4F5D95",
-    "JavaScript":"#f1e05a","TypeScript":"#3178c6","Shell":"#89e051",
-    "HTML":"#e34c26","CSS":"#563d7c","Makefile":"#427819",
+# Taalkleur als gekleurde emoji-cirkel (werkt overal zonder CSS)
+LANG_DOT = {
+    "Python":"🔵","C++":"🔴","C":"⚫","PHP":"🟣",
+    "JavaScript":"🟡","TypeScript":"🔵","Shell":"🟢",
+    "HTML":"🟠","CSS":"🟣","Makefile":"🟤",
 }
-
-# GitHub Octicons (16x16 viewBox paths)
-ICON_REPO = (
-    "M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75"
-    "h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05"
-    "A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8z"
-)
-ICON_FORK = (
-    "M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878"
-    "A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 "
-    "002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 "
-    "015 6.25v-.878z"
-)
-ICON_STAR = (
-    "M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279"
-    "l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75"
-    " 0 01-1.088-.79l.72-4.194L.873 6.374a.75.75 0 01.416-1.28l4.21-.611"
-    "L7.327.668A.75.75 0 018 .25z"
-)
 
 
 def esc(s):
@@ -126,6 +108,7 @@ def fetch_repos():
 
 
 def make_header_svg(cat):
+    """SVG categorie-header banner (ongewijzigd)."""
     cfg  = CATEGORIES[cat]
     W, H = 812, 56
     if cat == "MeshCore":
@@ -149,7 +132,7 @@ def make_header_svg(cat):
 
 
 def write_headers():
-    """Schrijf de categorie header-SVG's naar cards/."""
+    """Schrijf alleen de categorie header-SVG's."""
     os.makedirs(CARDS_DIR, exist_ok=True)
     for cat in CATEGORIES:
         path = os.path.join(CARDS_DIR, f"header-{cat_slug(cat)}.svg")
@@ -170,87 +153,93 @@ def categorize(repos):
     return result
 
 
-def _svg_icon(path_d, size=16):
-    """Inline octicon SVG, verticaal uitgelijnd met omliggende tekst."""
-    return (
-        f'<svg height="{size}" viewBox="0 0 16 16" width="{size}" aria-hidden="true"'
-        f' style="display:inline-block;vertical-align:middle;fill:#57606a;margin-right:4px;">'
-        f'<path d="{path_d}"/></svg>'
-    )
+def _node_id(name):
+    """Mermaid node-id: alleen letters, cijfers en underscore."""
+    return re.sub(r"[^A-Za-z0-9]", "_", name)
 
 
-def make_panel_html(repo):
+def _node_label(repo):
     """
-    Genereer een native HTML repo-panel identiek aan GitHub pinned-item-list-item.
-
-    Layout: float:left + width:48% geeft een 2-koloms raster zonder <table>.
-    Marge:  links 1% + breedte 48% + rechts 1% = 50% per kaart  =>  2 x 50% = 100%.
-    Stijl:  uitsluitend CSS-properties die GitHub's sanitizer doorlaat.
+    Mermaid node-tekst met backtick-syntax (ondersteunt markdown-bold + newlines).
+    Maximaal 3 regels: naam · beschrijving · meta.
     """
-    name  = esc(repo["name"])
-    url   = repo["html_url"]
-    desc  = esc(repo.get("description") or "")
+    name  = repo["name"]
+    desc  = (repo.get("description") or "")[:55]
     lang  = repo.get("language") or ""
     stars = repo.get("stargazers_count", 0)
     forks = repo.get("forks_count", 0)
-    fork  = repo.get("fork", False)
-    lc    = LANG_COLORS.get(lang, "#8f8f8f")
+    dot   = LANG_DOT.get(lang, "⚪")
 
-    # ── koptekst: repo-icoon + naam (+ optionele fork-badge) ──────────────
-    fork_badge = (
-        '<span style="font-size:11px;border:1px solid #d0d7de;'
-        'padding:1px 6px;margin-left:8px;color:#57606a;vertical-align:middle;">fork</span>'
-    ) if fork else ""
+    meta = ""
+    if lang:  meta += f"{dot} {lang}"
+    if stars: meta += f"  ⭐ {stars}"
+    if forks: meta += f"  ⑂ {forks}"
 
-    header = (
-        f'<div style="margin-bottom:8px;">'
-        f'{_svg_icon(ICON_FORK if fork else ICON_REPO)}'
-        f'<a href="{url}" style="font-weight:600;font-size:13px;color:#0969da;'
-        f'text-decoration:none;vertical-align:middle;">{name}</a>'
-        f'{fork_badge}'
-        f'</div>'
-    )
+    # Backtick-label: Mermaid rendert ** als bold, \n als regeleinde
+    return f'"`**{name}**\n{desc}\n{meta}`"'
 
-    # ── beschrijving ──────────────────────────────────────────────────────
-    desc_p = (
-        f'<p style="font-size:12px;color:#57606a;margin:0 0 12px 0;">{desc}</p>'
-        if desc else
-        '<p style="margin:0 0 12px 0;"></p>'
-    )
 
-    # ── meta-regel: taalkleur · taal · sterren · forks ────────────────────
-    # Taalbolletje als &#9679; (●) met color — werkt zonder border-radius.
-    meta = []
-    if lang:
-        meta.append(
-            f'<span style="color:{lc};font-size:14px;vertical-align:middle;'
-            f'margin-right:4px;">&#9679;</span>'
-            f'<span style="font-size:12px;color:#57606a;vertical-align:middle;'
-            f'margin-right:14px;">{esc(lang)}</span>'
+def make_mermaid_block(repos):
+    """
+    Genereer een Mermaid flowchart TD block voor een lijst repos.
+
+    Grid-techniek:
+      Elke rij krijgt een onzichtbare root-node R0, R1, …
+      R_i ~~~ kaart_links  en  R_i ~~~ kaart_rechts
+      Beide kaarten delen daardoor dezelfde rank → verschijnen NAAST ELKAAR.
+      R_i ~~~ R_{i+1} zorgt dat de rijen verticaal gestapeld worden.
+    """
+    lines = []
+
+    # ── Mermaid theme: wit kader, grijze rand, geen pijlen zichtbaar ──────
+    lines += [
+        "%%{init: {'theme': 'base', 'themeVariables': {",
+        "  'primaryColor': '#ffffff',",
+        "  'primaryBorderColor': '#d0d7de',",
+        "  'primaryTextColor': '#24292f',",
+        "  'lineColor': 'transparent',",
+        "  'fontSize': '13px'",
+        "}}}%%",
+        "flowchart TD",
+    ]
+
+    # ── Node definities ───────────────────────────────────────────────────
+    for repo in repos:
+        nid   = _node_id(repo["name"])
+        label = _node_label(repo)
+        lines.append(f"    {nid}{label}")
+
+    # ── Grid via verborgen root-nodes per rij ─────────────────────────────
+    rows = [repos[i:i+2] for i in range(0, len(repos), 2)]
+    for ri, row in enumerate(rows):
+        root = f"R{ri}"
+        lines.append(f'    {root}[" "]')
+        # Root verbindt beide kaarten → zelfde rank → naast elkaar
+        for repo in row:
+            lines.append(f"    {root} ~~~ {_node_id(repo['name'])}")
+        # Vorige root ~~~ huidige root → verticale stapeling van rijen
+        if ri > 0:
+            lines.append(f"    R{ri-1} ~~~ {root}")
+        # Root onzichtbaar
+        lines.append(
+            f"    style {root} fill:transparent,stroke:transparent,"
+            f"color:transparent,width:0px,height:0px"
         )
-    if stars:
-        meta.append(
-            f'{_svg_icon(ICON_STAR, 14)}'
-            f'<span style="font-size:12px;color:#57606a;vertical-align:middle;'
-            f'margin-right:14px;">{stars}</span>'
-        )
-    if forks:
-        meta.append(
-            f'{_svg_icon(ICON_FORK, 14)}'
-            f'<span style="font-size:12px;color:#57606a;vertical-align:middle;">{forks}</span>'
+
+    # ── Click handlers (echte links in GitHub-rendered Mermaid) ───────────
+    for repo in repos:
+        nid = _node_id(repo["name"])
+        lines.append(f'    click {nid} href "{repo["html_url"]}" _blank')
+
+    # ── Node stijlen: wit vlak + grijze rand (pinned-item stijl) ─────────
+    for repo in repos:
+        nid = _node_id(repo["name"])
+        lines.append(
+            f"    style {nid} fill:#ffffff,stroke:#d0d7de,stroke-width:1px,"
+            f"color:#0969da,text-align:left"
         )
 
-    meta_p = f'<p style="margin:0;">{"".join(meta)}</p>'
-
-    # ── kaart-wrapper ─────────────────────────────────────────────────────
-    # float:left + margin 1% links/rechts + width:48%  =  50% per kaart
-    # twee kaarten naast elkaar: 2 × 50% = exact 100%
-    return (
-        '<div style="float:left;width:48%;margin:0 1% 8px 1%;'
-        'border:1px solid #d0d7de;padding:16px;overflow:hidden;">\n'
-        f'{header}\n{desc_p}\n{meta_p}\n'
-        '</div>'
-    )
+    return "\n".join(lines)
 
 
 def build_readme_block(repos):
@@ -260,16 +249,14 @@ def build_readme_block(repos):
         if not group: continue
         slug = cat_slug(cat)
 
-        # categorie header (SVG ongewijzigd)
+        # SVG categorie-header (ongewijzigd)
         parts.append(f'\n<img src="cards/header-{slug}.svg" width="812"/>\n')
 
-        # float-container: overflow:hidden vangt de floats op (clearfix)
-        parts.append('<div style="overflow:hidden;margin-bottom:8px;">')
-        for repo in group:
-            parts.append(make_panel_html(repo))
-        # float-clear zodat de volgende sectie er netjes onder begint
-        parts.append('<div style="clear:both"></div>')
-        parts.append('</div>\n')
+        # Mermaid kaarten-blok
+        mermaid_code = make_mermaid_block(group)
+        parts.append("```mermaid")
+        parts.append(mermaid_code)
+        parts.append("```\n")
 
     return "\n".join(parts)
 
