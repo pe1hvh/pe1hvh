@@ -19,7 +19,7 @@ _MC_PATHS = '<path d="M3.277,0.053C2.829,0.053 2.401,0.41 2.321,0.851L0.013,13.6
 CATEGORIES = {
     "MeshCore": {
         "repos": {"meshcore-gui","meshcore-ble-connect","meshcore-bridge",
-                  "meshcore-observer","meshcore_py"},
+                  "meshcore-observer","meshcore-watchlist","meshcore_py"},
         "label": "MeshCore", "icon": None,
     },
     "Morse & CW": {
