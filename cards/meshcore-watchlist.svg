@@ -3,8 +3,8 @@
 <rect x="0" y="0" width="400" height="120" rx="8" class="bg"/>
 <path transform="translate(16,16) scale(0.9)" d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8z" class="ic"/>
 <text x="36" y="29" class="nm">meshcore-watchlist</text>
-<text x="16" y="48" class="dc">Local hashtag-channel monitor for MeshCore mesh</text>
-<text x="16" y="64" class="dc">radio networks</text>
+<text x="16" y="48" class="dc">Local hashtag-channel monitor for MeshCore — no</text>
+<text x="16" y="64" class="dc">device slots required</text>
 <circle cx="21" cy="99" r="5" fill="#3572A5"/>
 <text x="30" y="102" class="mt">Python</text>
 </svg>
