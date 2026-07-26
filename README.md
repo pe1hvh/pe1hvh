@@ -22,9 +22,10 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 
 <img src="cards/header-meshcore.svg" style="max-width:812px;width:100%"/>
 
-<a href="https://github.com/pe1hvh/meshcore-gui"><img src="cards/meshcore-gui.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-bridge"><img src="cards/meshcore-bridge.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
-<a href="https://github.com/pe1hvh/meshcore-watchlist"><img src="cards/meshcore-watchlist.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-observer"><img src="cards/meshcore-observer.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
-<a href="https://github.com/pe1hvh/meshcore-ble-connect"><img src="cards/meshcore-ble-connect.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore_py"><img src="cards/meshcore_py.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/meshcore-docs"><img src="cards/meshcore-docs.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-gui"><img src="cards/meshcore-gui.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/meshcore-bridge"><img src="cards/meshcore-bridge.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-watchlist"><img src="cards/meshcore-watchlist.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/meshcore-observer"><img src="cards/meshcore-observer.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/meshcore-ble-connect"><img src="cards/meshcore-ble-connect.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/meshcore_py"><img src="cards/meshcore_py.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
 
 
 
@@ -50,7 +51,7 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 
 <img src="cards/header-other.svg" style="max-width:812px;width:100%"/>
 
-<a href="https://github.com/pe1hvh/meshcore-docs"><img src="cards/meshcore-docs.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/javaPolar"><img src="cards/javaPolar.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
+<a href="https://github.com/pe1hvh/javaPolar"><img src="cards/javaPolar.svg" style="max-width:812px;width:100%"/></a>
 
 
 <!-- REPOS_END -->
