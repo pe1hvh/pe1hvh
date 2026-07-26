@@ -18,7 +18,7 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 ## Public repositories
 
 <!-- REPOS_START -->
-<!-- 15 repos — auto-updated by GitHub Actions -->
+<!-- 16 repos — auto-updated by GitHub Actions -->
 
 <img src="cards/header-meshcore.svg" style="max-width:812px;width:100%"/>
 
@@ -50,7 +50,7 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 
 <img src="cards/header-other.svg" style="max-width:812px;width:100%"/>
 
-<a href="https://github.com/pe1hvh/javaPolar"><img src="cards/javaPolar.svg" style="max-width:812px;width:100%"/></a>
+<a href="https://github.com/pe1hvh/meshcore-docs"><img src="cards/meshcore-docs.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a><a href="https://github.com/pe1hvh/javaPolar"><img src="cards/javaPolar.svg" style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/></a>
 
 
 <!-- REPOS_END -->
