@@ -90,7 +90,7 @@ ICON_STAR = (
     " 0 01-1.088-.79l.72-4.194L.873 6.374a.75.75 0 01.416-1.28l4.21-.611"
     "L7.327.668A.75.75 0 018 .25z"
 )
-CARD_W, CARD_H, PAD = 400, 120, 16
+CARD_W, CARD_H, PAD = 48%, 120, 16
 CARD_W_FULL = 812          # wide card for single-repo categories
 
 
