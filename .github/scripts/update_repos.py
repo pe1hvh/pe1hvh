@@ -6,36 +6,34 @@ sanitizer strips `style=` attributes (only src/alt/width/height/align/media
 survive), so all sizing must live in the SVG itself or in plain HTML
 attributes.
 
-Three layout modes, selectable via the CARD_LAYOUT env var:
+CRITICAL: GitHub's logged-out CSS bundle sets `.markdown-body img
+{display: block}`. The logged-in profile page loads a Tailwind-compatible
+Primer build and keeps images inline; the logged-out repository page loads
+the classic build and makes them blocks. Anything that relies on inline
+flow -- plain <img> tags, percentage widths, whitespace control -- lays out
+two-per-row for one and one-per-row for the other. Both modes below avoid
+inline flow entirely.
 
-  percent (default)
-      Plain <img width="49%">. Two cards always sit side by side, scaling
-      with the column, so the result does not depend on window width, page
-      type or login state. The card SVG keeps its integer viewBox, so it
-      scales cleanly. Trade-off: on a phone the cards shrink to ~165px and
-      the text becomes small.
+Two layout modes, selectable via the CARD_LAYOUT env var:
 
-  picture
-      Two card widths per repo. A <picture> element swaps them on viewport
-      width: wide screens get the narrow card (two side by side), narrow
-      screens get the full-width card (stacked). <source media=...> and
-      srcset are on GitHub's attribute allowlist, so this survives.
-      CAVEAT: GitHub wraps every <picture> in a <themed-picture> custom
-      element whose styling is not under our control, and BREAKPOINT is an
-      estimate of the viewport width at which the README column drops below
-      FULL_W. Both are unverified. Use only if you want width-dependent
-      stacking and are willing to tune BREAKPOINT by hand.
+  float (default)
+      <img align="left" width="49%"> floats the cards; floating works on
+      block-level elements, so it is unaffected by the display rule. Each
+      pair is closed with <br clear="all">, which drops the next row below
+      the floats. align, clear and br are all on GitHub's sanitizer
+      allowlist. No borders, cards scale with the column.
 
-  fixed
-      One narrower card width, plain <img>. Two fit side by side in any
-      README column wider than ~680px and wrap naturally below that.
-      Simpler, half the files, slightly smaller cards.
+  table
+      One <table> per row, two <td width="50%"> cells, image at
+      width="100%". Table cells never depend on inline layout, so this is
+      the most bulletproof option. Cost: GitHub draws a visible border
+      around every cell, and an odd trailing card leaves an empty cell.
 """
 import os, re, textwrap, requests
 
 USER       = os.environ.get("GITHUB_USER", "pe1hvh")
 TOKEN      = os.environ.get("GITHUB_TOKEN", "")
-LAYOUT     = os.environ.get("CARD_LAYOUT", "percent")   # "percent" | "picture" | "fixed"
+LAYOUT     = os.environ.get("CARD_LAYOUT", "float")     # "float" | "table"
 README     = "README.md"
 CARDS_DIR  = "cards"
 START      = "<!-- REPOS_START -->"
@@ -43,23 +41,22 @@ END        = "<!-- REPOS_END -->"
 SKIP_REPOS = {"pe1hvh"}
 HEADER_COLOR = "#0969da"
 
-if LAYOUT not in ("percent", "picture", "fixed"):
-    raise SystemExit(
-        f"CARD_LAYOUT must be 'percent', 'picture' or 'fixed', got {LAYOUT!r}")
+if LAYOUT not in ("float", "table"):
+    raise SystemExit(f"CARD_LAYOUT must be 'float' or 'table', got {LAYOUT!r}")
 
 # --- Geometry -----------------------------------------------------------
 # ALL of these are integers. They end up in viewBox, which accepts numbers
 # only -- a percentage here silently invalidates the whole attribute and the
 # browser falls back to the default 300x120 replaced-element size.
-PAIR_W     = 340 if LAYOUT == "fixed" else 400     # card shown two-per-row
-FULL_W     = PAIR_W * 2                            # card/header at full width
-CARD_H     = 120
-HEADER_H   = 56
-PAD        = 16
-BREAKPOINT = 1199   # picture mode only: viewport width below which we go full-width
+PAIR_W   = 400            # card shown two-per-row
+FULL_W   = PAIR_W * 2     # card/header spanning the full width
+CARD_H   = 120
+HEADER_H = 56
+PAD      = 16
 
-# Display widths for percent mode. 49+49 leaves 2% slack; the header and the
-# single-repo card use 98% so their right edge lines up with a pair of cards.
+# Display widths. In float mode 49+49 leaves 2% slack so rounding can never
+# push the pair onto two lines; the header and the single-repo card use 98%
+# so their right edge lines up with a pair of cards.
 HALF_PCT = "49%"
 FULL_PCT = "98%"
 
@@ -293,45 +290,60 @@ def write_cards(repos):
           f"(layout={LAYOUT}, pair={PAIR_W}px, full={FULL_W}px).")
 
 
-def card_link(repo, full=False):
-    """One clickable card. No style attribute -- GitHub strips those."""
+def card_img(repo, width, wide=False, extra=""):
+    """One clickable card image. No style attribute -- GitHub strips those.
+
+    `wide` picks the 800px SVG (a card that spans the whole column); it is
+    passed explicitly rather than inferred from `width`, because a table cell
+    also uses width="100%" while still holding a 400px card.
+    """
     name = repo["name"]
-    alt  = esc(name)
-    if LAYOUT == "percent":
-        src = card_file(name, wide=True) if full else card_file(name)
-        pct = FULL_PCT if full else HALF_PCT
-        img = f'<img src="{CARDS_DIR}/{src}" width="{pct}" alt="{alt}">'
-    elif full:
-        img = f'<img src="{CARDS_DIR}/{card_file(name, wide=True)}" alt="{alt}">'
-    elif LAYOUT == "picture":
-        img = (f'<picture>'
-               f'<source media="(max-width: {BREAKPOINT}px)" '
-               f'srcset="{CARDS_DIR}/{card_file(name, wide=True)}">'
-               f'<img src="{CARDS_DIR}/{card_file(name)}" alt="{alt}">'
-               f'</picture>')
+    src  = card_file(name, wide=wide)
+    return (f'<a href="{repo["html_url"]}">'
+            f'<img src="{CARDS_DIR}/{src}"{extra} width="{width}" alt="{esc(name)}">'
+            f'</a>')
+
+
+def row_float(left, right):
+    """Two floated cards plus a clearing break.
+
+    align="left" maps to float:left, which applies to block-level elements
+    too, so this survives .markdown-body img{display:block}. <br clear="all">
+    maps to clear:both and drops the next row below the floats.
+    """
+    html = card_img(left, HALF_PCT, extra=' align="left"')
+    if right is not None:
+        html += card_img(right, HALF_PCT, extra=' align="left"')
+    return html + '<br clear="all">'
+
+
+def row_table(left, right):
+    """Two table cells. Cells never depend on inline layout, so this always
+    holds -- at the cost of a visible border GitHub draws around each cell."""
+    cells = f'<td width="50%">{card_img(left, "100%")}</td>'
+    if right is not None:
+        cells += f'<td width="50%">{card_img(right, "100%")}</td>'
     else:
-        img = f'<img src="{CARDS_DIR}/{card_file(name)}" alt="{alt}">'
-    return f'<a href="{repo["html_url"]}">{img}</a>'
+        cells += '<td width="50%"></td>'
+    return f'<table><tr>{cells}</tr></table>'
 
 
 def build_readme_block(repos):
     grouped = categorize(repos)
     parts   = []
+    row     = row_float if LAYOUT == "float" else row_table
     for cat, group in grouped.items():
         if not group:
             continue
         slug = cat_slug(cat)
-        hw = f' width="{FULL_PCT}"' if LAYOUT == "percent" else ""
-        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg"{hw} alt="{esc(cat)}">\n')
+        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg" '
+                     f'width="{FULL_PCT}" alt="{esc(cat)}">\n')
         if len(group) == 1:
-            parts.append(card_link(group[0], full=True))
+            parts.append(card_img(group[0], FULL_PCT, wide=True))
         else:
-            # Two cards per row, concatenated with NO whitespace between
-            # </a> and <a> so no word-space is inserted between them.
             for i in range(0, len(group), 2):
-                left  = card_link(group[i])
-                right = card_link(group[i+1]) if i+1 < len(group) else ''
-                parts.append(left + right)
+                parts.append(row(group[i],
+                                 group[i+1] if i+1 < len(group) else None))
         parts.append("\n")
     return "\n".join(parts)
 
