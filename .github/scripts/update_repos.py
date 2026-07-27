@@ -91,7 +91,7 @@ ICON_STAR = (
     "L7.327.668A.75.75 0 018 .25z"
 )
 CARD_W, CARD_H, PAD = 48%, 120, 16
-CARD_W_FULL = 812          # wide card for single-repo categories
+CARD_W_FULL = 100%        # wide card for single-repo categories
 
 
 def esc(s):
