@@ -37,7 +37,7 @@ import os, re, textwrap, requests
 
 USER       = os.environ.get("GITHUB_USER", "pe1hvh")
 TOKEN      = os.environ.get("GITHUB_TOKEN", "")
-LAYOUT     = os.environ.get("CARD_LAYOUT", "float")     # "float" | "table"
+LAYOUT     = os.environ.get("CARD_LAYOUT", "table")     # "float" | "table"
 README     = "README.md"
 CARDS_DIR  = "cards"
 START      = "<!-- REPOS_START -->"
