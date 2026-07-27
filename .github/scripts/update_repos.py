@@ -1,16 +1,49 @@
 """
-update_repos.py — per-repo SVG cards + category headers, two-column table layout.
+update_repos.py — per-repo SVG cards + category headers.
+
+Layout is handled by INTRINSIC SVG WIDTH, never by CSS: GitHub's Markdown
+sanitizer strips `style=` attributes (only src/alt/width/height/align/media
+survive), so all sizing must live in the SVG itself or in plain HTML
+attributes.
+
+Two layout modes, selectable via the CARD_LAYOUT env var:
+
+  picture (default)
+      Two card widths per repo. A <picture> element swaps them on viewport
+      width: wide screens get the narrow card (two side by side), narrow
+      screens get the full-width card (stacked). <source media=...> and
+      srcset are on GitHub's attribute allowlist, so this survives.
+
+  fixed
+      One narrower card width, plain <img>. Two fit side by side in any
+      README column wider than ~680px and wrap naturally below that.
+      Simpler, half the files, slightly smaller cards.
 """
 import os, re, textwrap, requests
 
 USER       = os.environ.get("GITHUB_USER", "pe1hvh")
 TOKEN      = os.environ.get("GITHUB_TOKEN", "")
+LAYOUT     = os.environ.get("CARD_LAYOUT", "picture")   # "picture" | "fixed"
 README     = "README.md"
 CARDS_DIR  = "cards"
 START      = "<!-- REPOS_START -->"
 END        = "<!-- REPOS_END -->"
 SKIP_REPOS = {"pe1hvh"}
 HEADER_COLOR = "#0969da"
+
+if LAYOUT not in ("picture", "fixed"):
+    raise SystemExit(f"CARD_LAYOUT must be 'picture' or 'fixed', got {LAYOUT!r}")
+
+# --- Geometry -----------------------------------------------------------
+# ALL of these are integers. They end up in viewBox, which accepts numbers
+# only -- a percentage here silently invalidates the whole attribute and the
+# browser falls back to the default 300x120 replaced-element size.
+PAIR_W     = 400 if LAYOUT == "picture" else 340   # card shown two-per-row
+FULL_W     = PAIR_W * 2                            # card/header at full width
+CARD_H     = 120
+HEADER_H   = 56
+PAD        = 16
+BREAKPOINT = 1199   # px viewport below which the README column drops under FULL_W
 
 # Official MeshCore text logo (viewBox 0 0 134 15) scaled to 28px tall
 _MC_SCALE = 1.8667
@@ -90,35 +123,39 @@ ICON_STAR = (
     " 0 01-1.088-.79l.72-4.194L.873 6.374a.75.75 0 01.416-1.28l4.21-.611"
     "L7.327.668A.75.75 0 018 .25z"
 )
-CARD_W, CARD_H, PAD = "48%", 120, 16
-CARD_W_FULL = "100%"        # wide card for single-repo categories
 
 
 def esc(s):
-    return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"','"&quot;"'[1:-1])
+    return (s.replace("&", "&amp;").replace("<", "&lt;")
+             .replace(">", "&gt;").replace('"', "&quot;"))
 
 
 def cat_slug(c):
-    return c.lower().replace(" ","-").replace("&","en")
+    return c.lower().replace(" ", "-").replace("&", "en")
+
+
+def card_file(name, wide=False):
+    return f"{name}-wide.svg" if wide else f"{name}.svg"
 
 
 def fetch_repos():
-    hdrs = {"Accept":"application/vnd.github+json"}
-    if TOKEN: hdrs["Authorization"] = f"Bearer {TOKEN}"
+    hdrs = {"Accept": "application/vnd.github+json"}
+    if TOKEN:
+        hdrs["Authorization"] = f"Bearer {TOKEN}"
     repos, url = [], f"https://api.github.com/users/{USER}/repos"
-    params = {"per_page":100,"sort":"updated"}
+    params = {"per_page": 100, "sort": "updated"}
     while url:
         r = requests.get(url, headers=hdrs, params=params, timeout=15)
         r.raise_for_status()
         repos.extend(r.json())
-        url = r.links.get("next",{}).get("url")
+        url = r.links.get("next", {}).get("url")
         params = {}
     return [r for r in repos if r["name"] not in SKIP_REPOS]
 
 
 def make_header_svg(cat):
     cfg  = CATEGORIES[cat]
-    W, H = 812, 56
+    W, H = FULL_W, HEADER_H
     if cat == "MeshCore":
         body = (
             f'<g transform="translate(12,14) scale({_MC_SCALE})" fill="white">{_MC_PATHS}</g>'
@@ -139,17 +176,19 @@ def make_header_svg(cat):
     )
 
 
-def make_card_svg(repo, card_w=CARD_W):
+def make_card_svg(repo, card_w):
+    """card_w is an integer pixel width -- never a percentage."""
     name  = esc(repo["name"])
     desc  = repo.get("description") or ""
     lang  = repo.get("language") or ""
     stars = repo.get("stargazers_count", 0)
     forks = repo.get("forks_count", 0)
     fork  = repo.get("fork", False)
-    lc    = LANG_COLORS.get(lang,"#8f8f8f")
+    lc    = LANG_COLORS.get(lang, "#8f8f8f")
     ip    = ICON_FORK if fork else ICON_REPO
-    wrap_w = 48 if card_w == CARD_W else 100   # wider text wrap for full-width card
-    dl    = textwrap.wrap(desc, width=wrap_w)[:2]
+    # ~8.3px per character at 11px in this font; scales with the card
+    wrap_w = max(20, int(card_w / 8.3))
+    dl     = textwrap.wrap(desc, width=wrap_w)[:2]
     style = (
         "<style>"
         ".bg{fill:#fff;stroke:#d0d7de;stroke-width:1}"
@@ -164,23 +203,24 @@ def make_card_svg(repo, card_w=CARD_W):
         "</style>"
     )
     p = [
-        f'<svg width="{card_w}" height="{CARD_H}" viewBox="0 0 {card_w} {CARD_H}" xmlns="http://www.w3.org/2000/svg">',
+        f'<svg width="{card_w}" height="{CARD_H}" viewBox="0 0 {card_w} {CARD_H}" '
+        f'xmlns="http://www.w3.org/2000/svg">',
         style,
         f'<rect x="0" y="0" width="{card_w}" height="{CARD_H}" rx="8" class="bg"/>',
         f'<path transform="translate({PAD},{PAD}) scale(0.9)" d="{ip}" class="ic"/>',
         f'<text x="{PAD+20}" y="{PAD+13}" class="nm">{name}</text>',
     ]
     if fork:
-        bx = CARD_W-58
+        bx = card_w - 58                       # was CARD_W: wrong card on wide variant
         p += [f'<rect x="{bx}" y="{PAD-2}" width="42" height="16" rx="8" class="fb"/>',
               f'<text x="{bx+21}" y="{PAD+10}" text-anchor="middle" class="ft">fork</text>']
-    for i,ln in enumerate(dl):
+    for i, ln in enumerate(dl):
         p.append(f'<text x="{PAD}" y="{PAD+32+(i*16)}" class="dc">{esc(ln)}</text>')
-    mx, my = PAD, CARD_H-18
+    mx, my = PAD, CARD_H - 18
     if lang:
         p += [f'<circle cx="{mx+5}" cy="{my-3}" r="5" fill="{lc}"/>',
               f'<text x="{mx+14}" y="{my}" class="mt">{esc(lang)}</text>']
-        mx += len(lang)*7+22
+        mx += len(lang) * 7 + 22
     if stars:
         p += [f'<path transform="translate({mx},{my-11}) scale(0.8)" d="{ICON_STAR}" class="ic"/>',
               f'<text x="{mx+14}" y="{my}" class="mt">{stars}</text>']
@@ -192,68 +232,81 @@ def make_card_svg(repo, card_w=CARD_W):
     return "\n".join(p)
 
 
-def write_cards(repos):
-    os.makedirs(CARDS_DIR, exist_ok=True)
-    existing = {f for f in os.listdir(CARDS_DIR) if f.endswith(".svg")}
-    current  = {f"{r['name']}.svg" for r in repos}
-    current |= {f"header-{cat_slug(c)}.svg" for c in CATEGORIES}
-    for stale in existing - current:
-        os.remove(os.path.join(CARDS_DIR, stale))
-    # Determine which repos are alone in their category → wide card
-    grouped = categorize(repos)
-    single_repos = {group[0]["name"] for group in grouped.values() if len(group) == 1}
-    for repo in repos:
-        card_w = CARD_W_FULL if repo["name"] in single_repos else CARD_W
-        open(os.path.join(CARDS_DIR,f"{repo['name']}.svg"),"w",encoding="utf-8").write(make_card_svg(repo, card_w=card_w))
-    for cat in CATEGORIES:
-        open(os.path.join(CARDS_DIR,f"header-{cat_slug(cat)}.svg"),"w",encoding="utf-8").write(make_header_svg(cat))
-    print(f"{len(repos)} cards + {len(CATEGORIES)} headers written.")
-
-
 def categorize(repos):
-    assigned, result = set(), {cat:[] for cat in CATEGORIES}
-    for cat,cfg in CATEGORIES.items():
-        if cat=="Other": continue
+    assigned, result = set(), {cat: [] for cat in CATEGORIES}
+    for cat, cfg in CATEGORIES.items():
+        if cat == "Other":
+            continue
         for repo in repos:
             if repo["name"] in cfg["repos"]:
-                result[cat].append(repo); assigned.add(repo["name"])
+                result[cat].append(repo)
+                assigned.add(repo["name"])
     for repo in repos:
         if repo["name"] not in assigned:
             result["Other"].append(repo)
     return result
 
 
-def card_link(repo):
-    # min-width:250px + width:49% = naast elkaar op breed scherm,
-    # onder elkaar op smal scherm (wrapping wanneer 2x250px > containerbreedte)
-    return (
-        f'<a href="{repo["html_url"]}">'
-        f'<img src="cards/{repo["name"]}.svg"'
-        f' style="width:49%;min-width:250px;max-width:400px;vertical-align:top"/>'
-        f'</a>'
-    )
+def write_cards(repos):
+    os.makedirs(CARDS_DIR, exist_ok=True)
+
+    current = set()
+    for repo in repos:
+        name = repo["name"]
+        open(os.path.join(CARDS_DIR, card_file(name)), "w", encoding="utf-8") \
+            .write(make_card_svg(repo, PAIR_W))
+        current.add(card_file(name))
+        # Wide variant: needed for single-repo categories in both modes, and
+        # for the <picture> fallback in picture mode.
+        open(os.path.join(CARDS_DIR, card_file(name, wide=True)), "w", encoding="utf-8") \
+            .write(make_card_svg(repo, FULL_W))
+        current.add(card_file(name, wide=True))
+
+    for cat in CATEGORIES:
+        fn = f"header-{cat_slug(cat)}.svg"
+        open(os.path.join(CARDS_DIR, fn), "w", encoding="utf-8").write(make_header_svg(cat))
+        current.add(fn)
+
+    existing = {f for f in os.listdir(CARDS_DIR) if f.endswith(".svg")}
+    for stale in existing - current:
+        os.remove(os.path.join(CARDS_DIR, stale))
+
+    print(f"{len(repos)*2} cards + {len(CATEGORIES)} headers written "
+          f"(layout={LAYOUT}, pair={PAIR_W}px, full={FULL_W}px).")
+
+
+def card_link(repo, full=False):
+    """One clickable card. No style attribute -- GitHub strips those."""
+    name = repo["name"]
+    alt  = esc(name)
+    if full:
+        img = f'<img src="{CARDS_DIR}/{card_file(name, wide=True)}" alt="{alt}">'
+    elif LAYOUT == "picture":
+        img = (f'<picture>'
+               f'<source media="(max-width: {BREAKPOINT}px)" '
+               f'srcset="{CARDS_DIR}/{card_file(name, wide=True)}">'
+               f'<img src="{CARDS_DIR}/{card_file(name)}" alt="{alt}">'
+               f'</picture>')
+    else:
+        img = f'<img src="{CARDS_DIR}/{card_file(name)}" alt="{alt}">'
+    return f'<a href="{repo["html_url"]}">{img}</a>'
 
 
 def build_readme_block(repos):
     grouped = categorize(repos)
     parts   = []
     for cat, group in grouped.items():
-        if not group: continue
+        if not group:
+            continue
         slug = cat_slug(cat)
-        parts.append(f'\n<img src="cards/header-{slug}.svg" style="max-width:812px;width:100%"/>\n')
+        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg" alt="{esc(cat)}">\n')
         if len(group) == 1:
-            # Enige repo in categorie → volledige breedte
-            repo = group[0]
-            parts.append(
-                f'<a href="{repo["html_url"]}">'
-                f'<img src="cards/{repo["name"]}.svg"'
-                f' style="max-width:812px;width:100%"/></a>'
-            )
+            parts.append(card_link(group[0], full=True))
         else:
-            # Twee kaarten naast elkaar; geen witruimte tussen </a><a>
-            # zodat de inline-elementen correct wrappen op smal scherm.
+            # Two cards per row, concatenated with NO whitespace between
+            # </a> and <a> so no word-space is inserted between them.
             for i in range(0, len(group), 2):
-                left = card_link(group[i])
+                left  = card_link(group[i])
                 right = card_link(group[i+1]) if i+1 < len(group) else ''
                 parts.append(left + right)
         parts.append("\n")
@@ -272,8 +325,8 @@ def update_readme(repos):
         f"{build_readme_block(repos)}\n"
         f"{END}"
     )
-    with open(README,"w",encoding="utf-8") as fh:
-        fh.write(pattern.sub(block, content))
+    with open(README, "w", encoding="utf-8") as fh:
+        fh.write(pattern.sub(lambda _: block, content))
     print("README.md updated.")
 
 
