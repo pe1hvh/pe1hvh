@@ -24,16 +24,20 @@ Two layout modes, selectable via the CARD_LAYOUT env var:
       allowlist. No borders, cards scale with the column.
 
   table
-      One <table> per row, two <td width="50%"> cells, image at
-      width="100%". Table cells never depend on inline layout, so this is
-      the most bulletproof option. Cost: GitHub draws a visible border
-      around every cell, and an odd trailing card leaves an empty cell.
+      One <table> per row, one <td> per card, cards at their intrinsic
+      400px. Table cells never depend on inline layout, so this is the most
+      bulletproof option. No percentages: .markdown-body table is
+      width:max-content, i.e. shrink-to-fit, so a percentage inside resolves
+      against a width derived from the content -- that is what made a lone
+      card shrink. Cost: GitHub draws a visible border around every cell,
+      and on a column narrower than ~830px the table scrolls horizontally
+      instead of scaling down.
 """
 import os, re, textwrap, requests
 
 USER       = os.environ.get("GITHUB_USER", "pe1hvh")
 TOKEN      = os.environ.get("GITHUB_TOKEN", "")
-LAYOUT     = os.environ.get("CARD_LAYOUT", "table")     # "float" | "table"
+LAYOUT     = os.environ.get("CARD_LAYOUT", "float")     # "float" | "table"
 README     = "README.md"
 CARDS_DIR  = "cards"
 START      = "<!-- REPOS_START -->"
@@ -290,17 +294,18 @@ def write_cards(repos):
           f"(layout={LAYOUT}, pair={PAIR_W}px, full={FULL_W}px).")
 
 
-def card_img(repo, width, wide=False, extra=""):
+def card_img(repo, width=None, wide=False, extra=""):
     """One clickable card image. No style attribute -- GitHub strips those.
 
     `wide` picks the 800px SVG (a card that spans the whole column); it is
-    passed explicitly rather than inferred from `width`, because a table cell
-    also uses width="100%" while still holding a 400px card.
+    passed explicitly rather than inferred from `width`, because `width` is
+    omitted entirely in table mode while the card is still the narrow one.
     """
     name = repo["name"]
     src  = card_file(name, wide=wide)
+    w    = f' width="{width}"' if width else ""   # omit -> intrinsic SVG size
     return (f'<a href="{repo["html_url"]}">'
-            f'<img src="{CARDS_DIR}/{src}"{extra} width="{width}" alt="{esc(name)}">'
+            f'<img src="{CARDS_DIR}/{src}"{extra}{w} alt="{esc(name)}">'
             f'</a>')
 
 
@@ -319,12 +324,18 @@ def row_float(left, right):
 
 def row_table(left, right):
     """Two table cells. Cells never depend on inline layout, so this always
-    holds -- at the cost of a visible border GitHub draws around each cell."""
-    cells = f'<td width="50%">{card_img(left, "100%")}</td>'
+    holds -- at the cost of a visible border GitHub draws around each cell.
+
+    No percentages here: .markdown-body table is width:max-content, so the
+    table is shrink-to-fit and any percentage inside resolves against a width
+    that is itself derived from the content. That is what made a lone card
+    shrink. The cards keep their intrinsic 400px instead, so a trailing card
+    is exactly as wide as a card in a pair, and it gets no empty sibling cell
+    to drag an empty bordered box along.
+    """
+    cells = f'<td>{card_img(left)}</td>'
     if right is not None:
-        cells += f'<td width="50%">{card_img(right, "100%")}</td>'
-    else:
-        cells += '<td width="50%"></td>'
+        cells += f'<td>{card_img(right)}</td>'
     return f'<table><tr>{cells}</tr></table>'
 
 
@@ -336,10 +347,13 @@ def build_readme_block(repos):
         if not group:
             continue
         slug = cat_slug(cat)
-        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg" '
-                     f'width="{FULL_PCT}" alt="{esc(cat)}">\n')
+        hw = f' width="{FULL_PCT}"' if LAYOUT == "float" else ""
+        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg"{hw} '
+                     f'alt="{esc(cat)}">\n')
         if len(group) == 1:
-            parts.append(card_img(group[0], FULL_PCT, wide=True))
+            parts.append(card_img(group[0],
+                                  FULL_PCT if LAYOUT == "float" else None,
+                                  wide=True))
         else:
             for i in range(0, len(group), 2):
                 parts.append(row(group[i],
