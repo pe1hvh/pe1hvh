@@ -6,13 +6,25 @@ sanitizer strips `style=` attributes (only src/alt/width/height/align/media
 survive), so all sizing must live in the SVG itself or in plain HTML
 attributes.
 
-Two layout modes, selectable via the CARD_LAYOUT env var:
+Three layout modes, selectable via the CARD_LAYOUT env var:
 
-  picture (default)
+  percent (default)
+      Plain <img width="49%">. Two cards always sit side by side, scaling
+      with the column, so the result does not depend on window width, page
+      type or login state. The card SVG keeps its integer viewBox, so it
+      scales cleanly. Trade-off: on a phone the cards shrink to ~165px and
+      the text becomes small.
+
+  picture
       Two card widths per repo. A <picture> element swaps them on viewport
       width: wide screens get the narrow card (two side by side), narrow
       screens get the full-width card (stacked). <source media=...> and
       srcset are on GitHub's attribute allowlist, so this survives.
+      CAVEAT: GitHub wraps every <picture> in a <themed-picture> custom
+      element whose styling is not under our control, and BREAKPOINT is an
+      estimate of the viewport width at which the README column drops below
+      FULL_W. Both are unverified. Use only if you want width-dependent
+      stacking and are willing to tune BREAKPOINT by hand.
 
   fixed
       One narrower card width, plain <img>. Two fit side by side in any
@@ -23,7 +35,7 @@ import os, re, textwrap, requests
 
 USER       = os.environ.get("GITHUB_USER", "pe1hvh")
 TOKEN      = os.environ.get("GITHUB_TOKEN", "")
-LAYOUT     = os.environ.get("CARD_LAYOUT", "picture")   # "picture" | "fixed"
+LAYOUT     = os.environ.get("CARD_LAYOUT", "percent")   # "percent" | "picture" | "fixed"
 README     = "README.md"
 CARDS_DIR  = "cards"
 START      = "<!-- REPOS_START -->"
@@ -31,19 +43,25 @@ END        = "<!-- REPOS_END -->"
 SKIP_REPOS = {"pe1hvh"}
 HEADER_COLOR = "#0969da"
 
-if LAYOUT not in ("picture", "fixed"):
-    raise SystemExit(f"CARD_LAYOUT must be 'picture' or 'fixed', got {LAYOUT!r}")
+if LAYOUT not in ("percent", "picture", "fixed"):
+    raise SystemExit(
+        f"CARD_LAYOUT must be 'percent', 'picture' or 'fixed', got {LAYOUT!r}")
 
 # --- Geometry -----------------------------------------------------------
 # ALL of these are integers. They end up in viewBox, which accepts numbers
 # only -- a percentage here silently invalidates the whole attribute and the
 # browser falls back to the default 300x120 replaced-element size.
-PAIR_W     = 400 if LAYOUT == "picture" else 340   # card shown two-per-row
+PAIR_W     = 340 if LAYOUT == "fixed" else 400     # card shown two-per-row
 FULL_W     = PAIR_W * 2                            # card/header at full width
 CARD_H     = 120
 HEADER_H   = 56
 PAD        = 16
-BREAKPOINT = 1199   # px viewport below which the README column drops under FULL_W
+BREAKPOINT = 1199   # picture mode only: viewport width below which we go full-width
+
+# Display widths for percent mode. 49+49 leaves 2% slack; the header and the
+# single-repo card use 98% so their right edge lines up with a pair of cards.
+HALF_PCT = "49%"
+FULL_PCT = "98%"
 
 # Official MeshCore text logo (viewBox 0 0 134 15) scaled to 28px tall
 _MC_SCALE = 1.8667
@@ -279,7 +297,11 @@ def card_link(repo, full=False):
     """One clickable card. No style attribute -- GitHub strips those."""
     name = repo["name"]
     alt  = esc(name)
-    if full:
+    if LAYOUT == "percent":
+        src = card_file(name, wide=True) if full else card_file(name)
+        pct = FULL_PCT if full else HALF_PCT
+        img = f'<img src="{CARDS_DIR}/{src}" width="{pct}" alt="{alt}">'
+    elif full:
         img = f'<img src="{CARDS_DIR}/{card_file(name, wide=True)}" alt="{alt}">'
     elif LAYOUT == "picture":
         img = (f'<picture>'
@@ -299,7 +321,8 @@ def build_readme_block(repos):
         if not group:
             continue
         slug = cat_slug(cat)
-        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg" alt="{esc(cat)}">\n')
+        hw = f' width="{FULL_PCT}"' if LAYOUT == "percent" else ""
+        parts.append(f'\n<img src="{CARDS_DIR}/header-{slug}.svg"{hw} alt="{esc(cat)}">\n')
         if len(group) == 1:
             parts.append(card_link(group[0], full=True))
         else:
