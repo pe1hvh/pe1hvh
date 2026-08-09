@@ -22,8 +22,8 @@ Active in **NoodNet Zwolle** (emergency communications) and **DOMCA** (Dutch Ope
 
 <img src="cards/header-meshcore.svg" alt="MeshCore">
 
-<table><tr><td><a href="https://github.com/pe1hvh/meshcore-docs"><img src="cards/meshcore-docs.svg" alt="meshcore-docs"></a></td><td><a href="https://github.com/pe1hvh/meshcore-observer"><img src="cards/meshcore-observer.svg" alt="meshcore-observer"></a></td></tr></table>
-<table><tr><td><a href="https://github.com/pe1hvh/meshcore-gui"><img src="cards/meshcore-gui.svg" alt="meshcore-gui"></a></td><td><a href="https://github.com/pe1hvh/meshcore-bridge"><img src="cards/meshcore-bridge.svg" alt="meshcore-bridge"></a></td></tr></table>
+<table><tr><td><a href="https://github.com/pe1hvh/meshcore-gui"><img src="cards/meshcore-gui.svg" alt="meshcore-gui"></a></td><td><a href="https://github.com/pe1hvh/meshcore-docs"><img src="cards/meshcore-docs.svg" alt="meshcore-docs"></a></td></tr></table>
+<table><tr><td><a href="https://github.com/pe1hvh/meshcore-observer"><img src="cards/meshcore-observer.svg" alt="meshcore-observer"></a></td><td><a href="https://github.com/pe1hvh/meshcore-bridge"><img src="cards/meshcore-bridge.svg" alt="meshcore-bridge"></a></td></tr></table>
 <table><tr><td><a href="https://github.com/pe1hvh/meshcore-watchlist"><img src="cards/meshcore-watchlist.svg" alt="meshcore-watchlist"></a></td><td><a href="https://github.com/pe1hvh/meshcore-ble-connect"><img src="cards/meshcore-ble-connect.svg" alt="meshcore-ble-connect"></a></td></tr></table>
 <table><tr><td><a href="https://github.com/pe1hvh/meshcore_py"><img src="cards/meshcore_py.svg" alt="meshcore_py"></a></td></tr></table>
 
