@@ -109,7 +109,8 @@ CATEGORIES = {
         ),
     },
     "Other": {
-        "repos": set(), "label": "Other — Projects",
+        "repos": {"chirp_radtel_rt950pro","javaPolar"},
+        "label": "Other — Projects",
         "icon": (
             '<rect x="4" y="6" width="32" height="28" rx="3" stroke="white" stroke-width="2.5" fill="none"/>'
             '<line x1="4" y1="14" x2="36" y2="14" stroke="white" stroke-width="2"/>'
