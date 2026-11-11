@@ -7,4 +7,6 @@
 <text x="363" y="26" text-anchor="middle" class="ft">fork</text>
 <text x="16" y="48" class="dc">Open-source Flutter client for MeshCore LoRa</text>
 <text x="16" y="64" class="dc">mesh networking devices</text>
+<circle cx="21" cy="99" r="5" fill="#8f8f8f"/>
+<text x="30" y="102" class="mt">Dart</text>
 </svg>
